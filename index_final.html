@@ -1,0 +1,388 @@
+<html>
+<head>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://dimplejs.org/dist/dimple.v2.1.6.min.js"></script>
+
+<title>World Universities Ranking Data Exploration </title>
+</head>
+<body class="container">
+
+  <div class="row">
+
+    <div id="chart1">
+      
+        
+<b>Which University is the best? Why it is the best? What metrics can we use to evaluate it? </b>
+
+<p>These are common questions when we are doing some research about worldwide universities and the following plots will gave you a brief overview about the universities ranking position and in what attributes they are better than others. Is the teaching, research or the number and quality of citations? To answer this question we will use the Times Higher Education World University Ranking</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div id="chart2"><p>From this first overview we can notice that Harvard, a well known university, occupied the first position in 2011 and was the best university on earth. But something started to happen as it lost the first place to California Institute of Technology in the next year. Harvard total score went from 96 to 94, but the most surprising decrease arrived at 2016 when it lost the second position and went to 6th. But why that happened?</p>
+    
+    <p> On the other hand, the University of Oxford increased its position from 2011 and now is the 2nd university on the list. What they did that Harvard did not?</p>
+    
+    </div>
+  </div>
+
+  <div class="row">
+    <div id="chart3">
+      <p>Going a little deep and filtering to see only Harvard, California Technology Institute (Caltec) and Oxford we start to research what happened to the research score, which is an interesting attribute to analyse since universities are heavely dependent on research.</p>
+      <p>From this plot Harvard and Oxford ended up in 2016 with almost 99 score while the best university in 2016 (Caltec) had only 98. So maybe the research area of Harvard was not the reason to decrease its total_score ranking position. So what could it be?</p>
+      
+    </div>
+  </div>
+
+   <div class="row">
+    <div id="chart4">
+      <p>
+        The next metric is citation and we can see that Harvard and Caltec have more score than Oxford, but the citation score of Oxford increased a lot, from 95 to 99. Confirming that this metric was not the reason for the position decrease of Harvard but seems to be the reason of the success of Oxford.
+      </p>
+    </div>
+  </div>
+
+<p>As we analyse teaching, the las metric but not the less important, we can see the reason why harvard lost its 1st place. With a big drop Harvard went from 100 (a perfect score) to 84. A 16 points decrease, making that metric the probably reason for the position decrease and an alert to Harvard.
+</p>
+<script type="text/javascript">
+
+
+      var svg3 = dimple.newSvg("#chart1", 850, 500);
+      d3.csv("teste.csv", function (data) {
+      
+        svg3.append("text")
+        .attr("x", 295)             
+        .attr("y", 20)
+        .attr("text-anchor", "middle")  
+        .style("font-size", "16px") 
+        .style("text-decoration", "underline")  
+        .text("Universities World Ranking based on Total Score");
+     
+        // Create the chart
+        var myChart3 = new dimple.chart(svg3, data);
+        myChart3.setBounds(60, 30, 420, 330)
+
+        // Create a standard bubble 
+        // We are coloring by University as that will be the key in the legend
+        var x = myChart3.addMeasureAxis("x", ["year"]);
+        var y = myChart3.addMeasureAxis("y", "total_score");
+        y.overrideMin = 75;
+        x.overrideMin = 2011;  
+        x.overrideMax = 2016;
+        //We add a line plot conecting the universities results by year
+        myChart3.addSeries(["year","university_name"], dimple.plot.line);
+        //And a bubble plot to have more information about that year.
+        myChart3.addSeries(["world_rank","year", "university_name"], dimple.plot.bubble);
+        x.tickFormat = "d";
+        var myLegend3 = myChart3.addLegend(650, 30, 60, 400, "Right");
+        
+        myChart3.draw();
+        
+        // This is a critical step.  By doing this we orphan the legend. This
+        // means it will not respond to graph updates.  Without this the legend
+        // will redraw when the chart refreshes removing the unchecked item and
+        // also dropping the events we define below.
+        myChart3.legends = [];
+
+        // This block simply adds the legend title.
+        svg3.selectAll("title_text")
+          .data(["Click legend to","show/hide university:"])
+          .enter()
+          .append("text")
+            .attr("x", 499)
+            .attr("y", function (d, i) { return 10 + i * 14; })
+            .style("font-family", "sans-serif")
+            .style("font-size", "10px")
+            .style("color", "Black")
+            .text(function (d) { return d; });
+
+        // Get a unique list of universities values to use when filtering
+        var filterValues = dimple.getUniqueValues(data, "university_name");
+        // Get all the rectangles from the legend
+        myLegend3.shapes.selectAll("rect")
+          // Add a click event to each rectangle
+          .on("click", function (e) {
+            // This indicates whether the item is already visible or not
+            var hide = false;
+            var newFilters = [];
+            // If the filters contain the clicked shape hide it
+            filterValues.forEach(function (f) {
+              if (f === e.aggField.slice(-1)[0]) {
+                hide = true;
+              } else {
+                newFilters.push(f);
+              }
+            });
+            // Hide the shape or show it
+            if (hide) {
+              d3.select(this).style("opacity", 0.2);
+            } else {
+              newFilters.push(e.aggField.slice(-1)[0]);
+              d3.select(this).style("opacity", 0.8);
+            }
+            // Update the filters
+            filterValues = newFilters;
+            // Filter the data
+            myChart3.data = dimple.filterData(data, "university_name", filterValues);
+            // Add some transition animation
+            myChart3.draw(800);
+          });
+        
+      });
+
+
+      var svg2 = dimple.newSvg("#chart2", 850, 500);
+      d3.csv("teste.csv", function (data) {
+      dataFiltered = data.filter(function(row) {
+          return row['university_name'] == 'Harvard University' || row['university_name'] == 'California Institute of Technology' || row['university_name'] == 'University of Oxford';
+      })  
+      svg2.append("text")
+      .attr("x", 295)             
+      .attr("y", 20)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "16px") 
+      .style("text-decoration", "underline")  
+      .text("Universities World Ranking based on Research");
+     
+        // Create the chart
+        var myChart2 = new dimple.chart(svg2, dataFiltered);
+        myChart2.setBounds(60, 30, 420, 330)
+
+        // Create a standard bubble 
+        // We are coloring by University as that will be the key in the legend
+        var x = myChart2.addMeasureAxis("x", ["year"]);
+        var y = myChart2.addMeasureAxis("y", "research");
+        y.overrideMin = 90;
+        x.overrideMin = 2011;  
+        x.overrideMax = 2016;  
+        myChart2.addSeries(["world_rank","year", "university_name"], dimple.plot.bubble);
+        myChart2.addSeries(["year","university_name"], dimple.plot.line);
+        x.tickFormat = "d";
+        var myLegend2 = myChart2.addLegend(650, 30, 60, 400, "Right");
+        myChart2.draw();
+        
+        // This is a critical step.  By doing this we orphan the legend. This
+        // means it will not respond to graph updates.  Without this the legend
+        // will redraw when the chart refreshes removing the unchecked item and
+        // also dropping the events we define below.
+        myChart2.legends = [];
+
+        // This block simply adds the legend title.
+        svg2.selectAll("title_text")
+          .data(["Click legend to","show/hide university:"])
+          .enter()
+          .append("text")
+            .attr("x", 499)
+            .attr("y", function (d, i) { return 10 + i * 14; })
+            .style("font-family", "sans-serif")
+            .style("font-size", "10px")
+            .style("color", "Black")
+            .text(function (d) { return d; });
+
+        // Get a unique list of universities values to use when filtering
+        var filterValues = dimple.getUniqueValues(data, "university_name");
+        // Get all the rectangles from the legend
+        myLegend2.shapes.selectAll("rect")
+          // Add a click event to each rectangle
+          .on("click", function (e) {
+            // This indicates whether the item is already visible or not
+            var hide = false;
+            var newFilters = [];
+            // If the filters contain the clicked shape hide it
+            filterValues.forEach(function (f) {
+              if (f === e.aggField.slice(-1)[0]) {
+                hide = true;
+              } else {
+                newFilters.push(f);
+              }
+            });
+            // Hide the shape or show it
+            if (hide) {
+              d3.select(this).style("opacity", 0.2);
+            } else {
+              newFilters.push(e.aggField.slice(-1)[0]);
+              d3.select(this).style("opacity", 0.8);
+            }
+            // Update the filters
+            filterValues = newFilters;
+            // Filter the data
+            myChart2.data = dimple.filterData(data, "university_name", filterValues);
+            // Add some transition animation
+            myChart2.draw(800);
+          });
+        
+      });
+
+
+      var svg1 = dimple.newSvg("#chart3", 850, 500);
+      d3.csv("teste.csv", function (data) {
+        
+      dataFiltered = data.filter(function(row) {
+          return row['university_name'] == 'Harvard University' || row['university_name'] == 'California Institute of Technology' || row['university_name'] == 'University of Oxford';
+      })
+      
+      svg1.append("text")
+      .attr("x", 295)             
+      .attr("y", 20)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "16px") 
+      .style("text-decoration", "underline")  
+      .text("Universities World Ranking based on Citations");
+     
+        // Create the chart
+        var myChart = new dimple.chart(svg1, dataFiltered);
+        myChart.setBounds(60, 30, 420, 330)
+
+        // Create a standard bubble 
+        // We are coloring by University as that will be the key in the legend
+        var x = myChart.addMeasureAxis("x", ["year"]);
+        var y = myChart.addMeasureAxis("y", "citations");
+        y.overrideMin = 90;
+        x.overrideMin = 2011;  
+        x.overrideMax = 2016;  
+        myChart.addSeries(["world_rank","year", "university_name"], dimple.plot.bubble);
+        myChart.addSeries(["year","university_name"], dimple.plot.line);
+        x.tickFormat = "d";
+        var myLegend = myChart.addLegend(650, 30, 60, 400, "Right");
+        myChart.draw();
+        
+        // This is a critical step.  By doing this we orphan the legend. This
+        // means it will not respond to graph updates.  Without this the legend
+        // will redraw when the chart refreshes removing the unchecked item and
+        // also dropping the events we define below.
+        myChart.legends = [];
+
+        // This block simply adds the legend title.
+        svg1.selectAll("title_text")
+          .data(["Click legend to","show/hide university:"])
+          .enter()
+          .append("text")
+            .attr("x", 499)
+            .attr("y", function (d, i) { return 10 + i * 14; })
+            .style("font-family", "sans-serif")
+            .style("font-size", "10px")
+            .style("color", "Black")
+            .text(function (d) { return d; });
+
+        // Get a unique list of universities values to use when filtering
+        var filterValues = dimple.getUniqueValues(data, "university_name");
+        // Get all the rectangles from the legend
+        myLegend.shapes.selectAll("rect")
+          // Add a click event to each rectangle
+          .on("click", function (e) {
+            // This indicates whether the item is already visible or not
+            var hide = false;
+            var newFilters = [];
+            // If the filters contain the clicked shape hide it
+            filterValues.forEach(function (f) {
+              if (f === e.aggField.slice(-1)[0]) {
+                hide = true;
+              } else {
+                newFilters.push(f);
+              }
+            });
+            // Hide the shape or show it
+            if (hide) {
+              d3.select(this).style("opacity", 0.2);
+            } else {
+              newFilters.push(e.aggField.slice(-1)[0]);
+              d3.select(this).style("opacity", 0.8);
+            }
+            // Update the filters
+            filterValues = newFilters;
+            // Filter the data
+            myChart.data = dimple.filterData(data, "university_name", filterValues);
+            // Add some transition animation
+            myChart.draw(800);
+          });
+        
+      });
+
+      var svg4 = dimple.newSvg("#chart4", 850, 500);
+      d3.csv("teste.csv", function (data) {
+      dataFiltered = data.filter(function(row) {
+          return row['university_name'] == 'Harvard University' || row['university_name'] == 'California Institute of Technology' || row['university_name'] == 'University of Oxford';
+      })
+        
+      svg4.append("text")
+      .attr("x", 295)             
+      .attr("y", 20)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "16px") 
+      .style("text-decoration", "underline")  
+      .text("Universities World Ranking based on Teaching");
+     
+        // Create the chart
+        var myChart4 = new dimple.chart(svg4, dataFiltered);
+        myChart4.setBounds(60, 30, 420, 330)
+
+        // Create a standard bubble 
+        // We are coloring by University as that will be the key in the legend
+        var x = myChart4.addMeasureAxis("x", ["year"]);
+        var y = myChart4.addMeasureAxis("y", "teaching");
+        y.overrideMin = 80;
+        x.overrideMin = 2010;  
+        x.overrideMax = 2016;  
+        myChart4.addSeries(["world_rank","year", "university_name"], dimple.plot.bubble);
+        myChart4.addSeries(["year","university_name"], dimple.plot.line);
+        x.tickFormat = "d";
+        var myLegend4 = myChart4.addLegend(650, 30, 60, 400, "Right");
+        myChart4.draw();
+        
+        // This is a critical step.  By doing this we orphan the legend. This
+        // means it will not respond to graph updates.  Without this the legend
+        // will redraw when the chart refreshes removing the unchecked item and
+        // also dropping the events we define below.
+        myChart4.legends = [];
+
+        // This block simply adds the legend title.
+        svg4.selectAll("title_text")
+          .data(["Click legend to","show/hide university:"])
+          .enter()
+          .append("text")
+            .attr("x", 499)
+            .attr("y", function (d, i) { return 10 + i * 14; })
+            .style("font-family", "sans-serif")
+            .style("font-size", "10px")
+            .style("color", "Black")
+            .text(function (d) { return d; });
+
+        // Get a unique list of universities values to use when filtering
+        var filterValues = dimple.getUniqueValues(data, "university_name");
+        // Get all the rectangles from the legend
+        myLegend4.shapes.selectAll("rect")
+          // Add a click event to each rectangle
+          .on("click", function (e) {
+            // This indicates whether the item is already visible or not
+            var hide = false;
+            var newFilters = [];
+            // If the filters contain the clicked shape hide it
+            filterValues.forEach(function (f) {
+              if (f === e.aggField.slice(-1)[0]) {
+                hide = true;
+              } else {
+                newFilters.push(f);
+              }
+            });
+            // Hide the shape or show it
+            if (hide) {
+              d3.select(this).style("opacity", 0.2);
+            } else {
+              newFilters.push(e.aggField.slice(-1)[0]);
+              d3.select(this).style("opacity", 0.8);
+            }
+            // Update the filters
+            filterValues = newFilters;
+            // Filter the data
+            myChart4.data = dimple.filterData(data, "university_name", filterValues);
+            // Add some transition animation
+            myChart4.draw(800);
+          });
+        
+      });
+
+
+  
+  </script>
+</body>
+</html>
